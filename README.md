@@ -79,3 +79,29 @@ src/
 ```
 
 *(Note: This project handles mocked data purely on the frontend for evaluation purposes and does not require a backend API)*
+
+---
+
+## 🧠 Technical Decisions and Trade-offs
+
+During the development of this project, several architectural choices were made to strictly balance complexity, scalability, and delivery speed:
+
+### 1. State Management: `Context API` + `useReducer` vs Redux/Zustand
+- **Decision:** I chose native React Context mapped heavily to a single central `useReducer` hook (`AppContext.jsx`) instead of introducing a heavy external library like Redux or Zustand.
+- **Trade-off:** Native Context can theoretically cause unnecessary re-renders if components subscribe to state they don't consume, but for a dashboard of this size, React handles this gracefully. It immensely reduced overhead, reduced third-party bloat, and kept everything contained entirely within React's standard framework.
+
+### 2. Styling: Plain Tailwind CSS vs Component Libraries (MUI / Shadcn UI)
+- **Decision:** I strictly utilized vanilla Tailwind CSS utility classes instead of picking a pre-built Component Library like Material UI or Shadcn.
+- **Trade-off:** Pre-fab component libraries give faster basic setups, but they come with heavy javascript bundles and rigid design constraints. Adopting strict Tailwind granted pure control over granular elements (like responsive modal sliding and precise data-table alignments) allowing the creation of a much more customized, "lightweight", and premium "fintech" feel without bloated node_modules.
+
+### 3. Client Storage Strategy: Synchronous `localStorage`
+- **Decision:** Application state (Transactions, Active Roles, Dark Mode toggles) hydrates immediately from `localStorage` inside the Context initialization using a helper function.
+- **Trade-off:** It is synchronous and blocks the main thread slightly on boot, but since we are handling a relatively small JSON dataset of under ~1,000 mock transactions, the performance hit is 0ms. If this project scaled to require an actual Database, we would transition to Asynchronous fetches (`useEffect` on mount) and display skeletons/spinners. Synchronous local hydration allowed us to avoid complex "Loading States" completely for a smoother UX.
+
+### 4. Charting Library: Recharts vs Chart.js / D3
+- **Decision:** Integrated `recharts` for all data visualizations.
+- **Trade-off:** Writing custom SVG charts in pure React (like D3) offers infinite flexibility, but takes immense time. Recharts is built specifically for React, highly declarative, and integrates flawlessly into responsive, flex-based CSS layouts. The trade-off is minor chart aesthetic customization limitations, but it delivered 95% of the needed functionality seamlessly out of the box.
+
+### 5. Unified Transaction Filtering Logic
+- **Decision:** Implemented dynamic derived state via `getFilteredTransactions` rather than saving 'filtered results' directly into state.
+- **Trade-off:** This recalculates the array on every render cycle using pure functional JavaScript. We heavily relied on React's rendering efficiency here to avoid caching problems. This ensures there are zero "desyncs" where the user sees a filtered transaction that was just deleted by an Admin behind the scenes.
